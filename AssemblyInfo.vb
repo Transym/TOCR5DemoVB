@@ -11,13 +11,13 @@ Imports System.Runtime.InteropServices
 <Assembly: AssemblyTitle("Transym OCR Example Code")> 
 <Assembly: AssemblyDescription("")> 
 <Assembly: AssemblyCompany("Transym Computer System Limited")> 
-<Assembly: AssemblyProduct("Example Code")> 
-<Assembly: AssemblyCopyright("Copyright © Transym 2012")> 
+<Assembly: AssemblyProduct("Example Code")>
+<Assembly: AssemblyCopyright("Copyright © Transym 2021")>
 <Assembly: AssemblyTrademark("")> 
 <Assembly: CLSCompliant(False)> 
 
 'The following GUID is for the ID of the typelib if this project is exposed to COM
-<Assembly: Guid("422E06AD-3F45-4AF3-A9A0-D235D60BBBC2")> 
+<Assembly: Guid("422E06AD-3F45-4AF3-A9A0-D235D60BBBC2")>
 
 ' Version information for an assembly consists of the following four values:
 '
@@ -29,6 +29,6 @@ Imports System.Runtime.InteropServices
 ' You can specify all the values or you can default the Build and Revision Numbers 
 ' by using the '*' as shown below:
 
-<Assembly: AssemblyVersion("4.0.0.0")> 
+<Assembly: AssemblyVersion("5.1.0.0")>
 
-<Assembly: AssemblyFileVersionAttribute("4.0.0.0")> 
+<Assembly: AssemblyFileVersionAttribute("5.1.0.0")>

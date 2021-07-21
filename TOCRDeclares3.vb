@@ -1,7 +1,9 @@
 '***************************************************************************
 ' Module:     TOCRDeclares
 '
-' TOCR declares Version 5.1.0.0
+' TOCR declares Version 5.0.0.0
+
+#Const SUPERSEDED = False ' disallow superseded routines
 
 Option Strict On
 Option Explicit On
@@ -11,44 +13,92 @@ Imports System.Runtime.InteropServices
 Module TOCRDeclares
 
 #Region " Structures "
+    <StructLayout(LayoutKind.Sequential)>
+    Public Structure TOCRPROCESSPDFOPTIONS_EG
+        Dim ResultsOn As Byte 'V5 addition
+        Dim OriginalImageOn As Byte 'V5 addition
+        Dim ProcessedImageOn As Byte 'V5 addition
+        Dim PDFSpare As Integer 'V5 addition
+    End Structure
+
 
     <StructLayout(LayoutKind.Sequential)>
-    Structure TOCRPROCESSOPTIONS_EG
-        Dim StructId As Integer
-        Dim InvertWholePage As Short
-        Dim DeskewOff As Short
-        Dim Orientation As Byte
-        Dim NoiseRemoveOff As Short
-        Dim ReturnNoiseOn As Short
-        Dim LineRemoveOff As Short
-        Dim DeshadeOff As Short
-        Dim InvertOff As Short
-        Dim SectioningOn As Short
-        Dim MergeBreakOff As Short
-        Dim LineRejectOff As Short
-        Dim CharacterRejectOff As Short
-        Dim ResultsReference As Short
-        Dim LexMode As Short
-        Dim OCRBOnly As Short
-        Dim Speed As Short
-        Dim FontStyleInfoOff As Short
-        Dim Reserved1 As Short
-        Dim Reserved2 As Short
-        Dim Reserved3 As Short
-        Dim CCAlgorithm As Integer
-        Dim CCThreshold As Single
-        Dim CGAlgorithm As Integer
-        Dim ExtraInfFlags As Integer
-        <VBFixedArray(45), MarshalAs(UnmanagedType.ByValArray, SizeConst:=46)>
-        Public DisableLangs() As Byte
-        Dim Reserved4 As Short
-        Dim Reserved5 As Short
+    Public Structure TOCRCHAROPTIONS_EG
+        'Line below: V5 extended from 601 to 608
         <VBFixedArray(607), MarshalAs(UnmanagedType.ByValArray, SizeConst:=608)>
         Public DisableCharW() As Byte
 
         Public Sub Initialize()
+            ReDim DisableCharW(607) 'V5 extended 600 to 607
+        End Sub
+    End Structure 'TOCRCHAROPTIONS_EG
+
+    <StructLayout(LayoutKind.Sequential)>
+    Public Structure TOCRLANGUAGEOPTIONS_EG
+        'Line below: V5 extended from 601 to 608
+        '<VBFixedArray(607), MarshalAs(UnmanagedType.ByValArray, SizeConst:=608)> _
+        'Public DisableCharW() As Byte
+        ' 608 bytes
+        <VBFixedArray(45), MarshalAs(UnmanagedType.ByValArray, SizeConst:=46)>
+        Dim DisableLangs() As Byte
+        ' 654 bytes
+
+        Public Sub Initialize()
             ReDim DisableLangs(45)
-            ReDim DisableCharW(607)
+            'ReDim DisableCharW(607) 'V5 extended 600 to 607
+        End Sub
+    End Structure 'TOCRLANGUAGEOPTIONS_EG
+
+    <StructLayout(LayoutKind.Sequential)>
+    Structure TOCRPROCESSOPTIONS_EG
+        Dim StructId As Int32
+        ' 4 bytes
+        Dim InvertWholePage As Byte
+        Dim DeskewOff As Byte
+        Dim Orientation As Byte
+        Dim NoiseRemoveOff As Byte
+        ' 8 bytes
+        Dim ReturnNoiseOn As Byte 'v5 addition
+        Dim LineRemoveOff As Byte
+        Dim DeshadeOff As Byte
+        Dim InvertOff As Byte
+        ' 12 bytes
+        Dim SectioningOn As Byte
+        Dim MergeBreakOff As Byte
+        Dim LineRejectOff As Byte
+        Dim CharacterRejectOff As Byte
+        ' 16 bytes
+        Dim ResultsReference As Byte
+        Dim LexMode As Byte
+        Dim OCRBOnly As Byte
+        Dim Speed As Byte
+        ' 20 bytes
+        Dim FontStyleInfoOff As Byte
+        Dim Reserved1 As Byte
+        Dim Reserved2 As Byte
+        Dim Reserved3 As Byte
+        ' 24 bytes
+        Dim CCAlgorithm As Int32
+        ' 28 bytes
+        Dim CCThreshold As Single
+        ' 32 bytes
+        Dim CGAlgorithm As Int32 'V5 addition
+        ' 36 bytes
+        Dim ExtraInfFlags As Int32
+        ' 40 bytes
+        <VBFixedArray(45), MarshalAs(UnmanagedType.ByValArray, SizeConst:=46)>
+        Dim DisableLangs() As Byte
+        Dim Reserved4 As Byte
+        Dim Reserved5 As Byte
+        ' 88 bytes
+        'Line below: V5 extended from 601 to 608
+        <VBFixedArray(607), MarshalAs(UnmanagedType.ByValArray, SizeConst:=608)>
+        Public DisableCharW() As Byte
+        ' 696 bytes
+
+        Public Sub Initialize()
+            ReDim DisableLangs(45)
+            ReDim DisableCharW(607) 'V5 extended 600 to 607
         End Sub
     End Structure
 
@@ -73,23 +123,23 @@ Module TOCRDeclares
         Dim YPixelsPerInch As Integer
         Dim NumItems As Integer
         Dim MeanConfidence As Single
-        Dim DominantLanguage As Integer
+        Dim DominantLanguage As Integer 'V5 addition
     End Structure
 
     <StructLayout(LayoutKind.Sequential)>
     Public Structure TOCRRESULTSITEM_EG
         Dim Confidence As Single
-        Dim StructId As Short
-        Dim OCRCharWUnicode As Short
-        Dim OCRCharWInternal As Short
-        Dim FontID As Short
-        Dim FontStyleInfo As Short
-        Dim XPos As Short
-        Dim YPos As Short
-        Dim XDim As Short
-        Dim YDim As Short
-        Dim YDimRef As Short
-        Dim Noise As Short
+        Dim StructId As UShort
+        Dim OCRCharWUnicode As UShort 'V5 split from OCRChaW
+        Dim OCRCharWInternal As UShort 'V5 split from OCRChaW
+        Dim FontID As UShort
+        Dim FontStyleInfo As UShort
+        Dim XPos As UShort
+        Dim YPos As UShort
+        Dim XDim As UShort
+        Dim YDim As UShort
+        Dim YDimRef As UShort
+        Dim Noise As UShort 'V5 addition
     End Structure
 
     <StructLayout(LayoutKind.Sequential)>
@@ -101,26 +151,27 @@ Module TOCRDeclares
     <StructLayout(LayoutKind.Sequential)>
     Public Structure TOCRRESULTSITEMEXALT_EG
         Dim Factor As Single
-        Dim Valid As Short
-        Dim OCRCharWUnicode As Short
-        Dim OCRCharWInternal As Short
+        Dim Valid As UShort
+        Dim OCRCharWUnicode As UShort 'V5 split from OCRChaW
+        Dim OCRCharWInternal As UShort 'V5 split from OCRChaW
     End Structure
 
     <StructLayout(LayoutKind.Sequential)>
     Public Structure TOCRRESULTSITEMEX_EG
         Dim Confidence As Single
-        Dim StructId As Short
-        Dim OCRCharWUnicode As Short
-        Dim OCRCharWInternal As Short
-        Dim FontID As Short
-        Dim FontStyleInfo As Short
-        Dim XPos As Short
-        Dim YPos As Short
-        Dim XDim As Short
-        Dim YDim As Short
-        Dim YDimRef As Short
-        Dim Noise As Short
-        <VBFixedArray(4)> Dim Alt() As TOCRRESULTSITEMEXALT_EG
+        Dim StructId As UShort
+        Dim OCRCharWUnicode As UShort 'V5 split from OCRChaW
+        Dim OCRCharWInternal As UShort 'V5 split from OCRChaW
+        Dim FontID As UShort
+        Dim FontStyleInfo As UShort
+        Dim XPos As UShort
+        Dim YPos As UShort
+        Dim XDim As UShort
+        Dim YDim As UShort
+        Dim YDimRef As UShort
+        Dim Noise As UShort 'V5 addition
+        <VBFixedArray(4)> Dim Alt() As TOCRRESULTSITEMEXALT_EG  'N.B. this design reports the wrong structure size
+        ' so we have to use careful marshaling when talking to the dll
 
         Public Sub Initialize()
             ReDim Alt(4)
@@ -132,13 +183,11 @@ Module TOCRDeclares
         Dim Hdr As TOCRRESULTSHEADER_EG
         Dim Item() As TOCRRESULTSITEMEX_EG
     End Structure
-
 #End Region
 
 #Region " SUPERSEDED Structures "
-
-    'Superseded by TOCRPROCESSOPTIONS_EG
-    <StructLayout(LayoutKind.Sequential)>
+#If SUPERSEDED Then
+    <StructLayout(LayoutKind.Sequential)> _
     Structure TOCRPROCESSOPTIONS
         Dim StructId As Integer
         Dim InvertWholePage As Short
@@ -153,7 +202,7 @@ Module TOCRDeclares
         Dim LineRejectOff As Short
         Dim CharacterRejectOff As Short
         Dim LexOff As Short
-        <VBFixedArray(255), MarshalAs(UnmanagedType.ByValArray, SizeConst:=256)>
+        <VBFixedArray(255), MarshalAs(UnmanagedType.ByValArray, SizeConst:=256)> _
         Public DisableCharacter() As Short
 
         Public Sub Initialize()
@@ -161,8 +210,7 @@ Module TOCRDeclares
         End Sub
     End Structure
 
-    'Superseded by TOCRJOBINFO_EG
-    <StructLayout(LayoutKind.Sequential, CharSet:=CharSet.Ansi)>
+    <StructLayout(LayoutKind.Sequential, CharSet:=CharSet.Ansi)> _
     Public Structure TOCRJOBINFO2
         Dim StructId As Integer
         Dim JobType As Integer
@@ -177,7 +225,7 @@ Module TOCRDeclares
     End Structure
 
     ' Superseded by TOCRJOBINFO2
-    <StructLayout(LayoutKind.Sequential, CharSet:=CharSet.Ansi)>
+    <StructLayout(LayoutKind.Sequential, CharSet:=CharSet.Ansi)> _
     Public Structure TOCRJOBINFO
         Dim StructId As Integer
         Dim JobType As Integer
@@ -190,8 +238,16 @@ Module TOCRDeclares
         End Sub
     End Structure
 
-    'Superseded by TOCRRESULTSITEM_EG
-    <StructLayout(LayoutKind.Sequential)>
+    <StructLayout(LayoutKind.Sequential)> _
+    Public Structure TOCRRESULTSHEADER
+        Dim StructId As Integer
+        Dim XPixelsPerInch As Integer
+        Dim YPixelsPerInch As Integer
+        Dim NumItems As Integer
+        Dim MeanConfidence As Single
+    End Structure
+
+    <StructLayout(LayoutKind.Sequential)> _
     Public Structure TOCRRESULTSITEM
         Dim StructId As Short
         Dim OCRCha As Short
@@ -202,33 +258,20 @@ Module TOCRDeclares
         Dim YDim As Short
     End Structure
 
-    'Superseded by TOCRRESULTSHEADER_EG
-    <StructLayout(LayoutKind.Sequential)>
-    Public Structure TOCRRESULTSHEADER
-        Dim StructId As Integer
-        Dim XPixelsPerInch As Integer
-        Dim YPixelsPerInch As Integer
-        Dim NumItems As Integer
-        Dim MeanConfidence As Single
-    End Structure
-
-    'Superseded by TOCRRESULTS_EG
-    <StructLayout(LayoutKind.Sequential)>
+    <StructLayout(LayoutKind.Sequential)> _
     Public Structure TOCRRESULTS
         Dim Hdr As TOCRRESULTSHEADER
         Dim Item() As TOCRRESULTSITEM
     End Structure
 
-    'Superseded by TOCRRESULTSITEMEXALT_EG
-    <StructLayout(LayoutKind.Sequential)>
+    <StructLayout(LayoutKind.Sequential)> _
     Public Structure TOCRRESULTSITEMEXALT
         Dim Valid As Short
         Dim OCRCha As Short
         Dim Factor As Single
     End Structure
 
-    'Superseded by TOCRRESULTSITEMEX_EG
-    <StructLayout(LayoutKind.Sequential)>
+    <StructLayout(LayoutKind.Sequential)> _
     Public Structure TOCRRESULTSITEMEX
         Dim StructId As Short
         Dim OCRCha As Short
@@ -244,17 +287,24 @@ Module TOCRDeclares
         End Sub
     End Structure
 
-    'Superseded by TOCRRESULTSEX_EG
-    <StructLayout(LayoutKind.Sequential)>
+    <StructLayout(LayoutKind.Sequential)> _
     Public Structure TOCRRESULTSEX
         Dim Hdr As TOCRRESULTSHEADER
         Dim Item() As TOCRRESULTSITEMEX
     End Structure
-
+#End If
 #End Region
 
 #Region " Declares "
+    ' 3 WAYS TO DECLARE THE FUNCTION
+    'Declare Function testfn Lib "TOCRDLL" _
+    '(<MarshalAs(UnmanagedType.LPWStr)> ByVal UniStr As String, ByVal ANsiStr As String, ByVal lens2 As Integer, ByRef ju As TOCRJOBINFO_EG) As Integer
+    'Declare Ansi Function testfn Lib "TOCRDLL" _
+    '(<MarshalAs(UnmanagedType.LPWStr)> ByVal UniStr As String, ByVal ANsiStr As String, ByVal lens2 As Integer, ByRef ju As TOCRJOBINFO_EG) As Integer
+    'Declare Unicode Function testfn Lib "TOCRDLL" _
+    '(ByVal UniStr As String, <MarshalAs(UnmanagedType.LPStr)> ByVal ANsiStr As String, ByVal lens2 As Integer, ByRef ju As TOCRJOBINFO_EG) As Integer
 
+    'Release Win32 and Win64 version
     Declare Function TOCRInitialise Lib "TOCRDll" _
     (ByRef JobNo As Integer) As Integer
 
@@ -262,7 +312,10 @@ Module TOCRDeclares
         (ByVal JobNo As Integer) As Integer
 
     Declare Function TOCRDoJob_EG Lib "TOCRDll" _
-        (ByVal JobNo As Integer, ByRef JobInfo As TOCRJOBINFO_EG) As Integer
+        (ByVal JobNo As Integer, ByRef JobInfo_EG As TOCRJOBINFO_EG) As Integer
+
+    Declare Function TOCRDoJobPDF_EG Lib "TOCRDll" _
+        (ByVal JobNo As Integer, ByRef JobInfo_EG As TOCRJOBINFO_EG, ByVal Filename As String, ByRef PDFOpts As TOCRPROCESSPDFOPTIONS_EG) As Integer
 
     Declare Function TOCRWaitForJob Lib "TOCRDll" _
         (ByVal JobNo As Integer, ByRef JobStatus As Integer) As Integer
@@ -276,27 +329,23 @@ Module TOCRDeclares
     Declare Function TOCRGetJobStatus Lib "TOCRDll" _
         (ByVal JobNo As Integer, ByRef JobStatus As Integer) As Integer
 
-    Declare Function TOCRGetJobStatusEx Lib "TOCRDll" _
-        (ByVal JobNo As Integer, ByRef JobStatus As Integer, ByRef Progress As Single, ByRef AutoOrientation As Integer) As Integer
+    Declare Function TOCRGetJobStatusEx2 Lib "TOCRDll" _
+        (ByVal JobNo As Integer, ByRef JobStatus As Integer, ByRef Progress As Single, ByRef AutoOrientation As Integer, ByRef ExtraInfFlags As Integer) As Integer
 
     Declare Ansi Function TOCRGetJobStatusMsg Lib "TOCRDll" _
-        (ByVal JobNo As Integer, ByVal Msg As String) As Integer
+        (ByVal JobNo As Integer, ByVal Msg As System.Text.StringBuilder) As Integer
 
     Declare Ansi Function TOCRGetNumPages Lib "TOCRDll" _
         (ByVal JobNo As Integer, ByVal Filename As String, ByVal JobType As Integer, ByRef NumPages As Integer) As Integer
 
-    Declare Unicode Function TOCRGetJobResultsEx_EG Lib "TOCRDll" _
+    Declare Function TOCRGetJobResultsEx_EG Lib "TOCRDll" _
         (ByVal JobNo As Integer, ByVal Mode As Integer, ByRef ResultsInf As Integer, ByVal Bytes As System.IntPtr) As Integer
 
     Declare Ansi Function TOCRGetLicenceInfoEx Lib "TOCRDll" _
         (ByVal JobNo As Integer, ByVal Licence As String, ByRef Volume As Integer, ByRef Time As Integer, ByRef Remaining As Integer, ByRef Features As Integer) As Integer
 
-    ' Convert a TIF or PDF file to a bitmap file
-    Declare Ansi Function TOCRConvertFormat Lib "TOCRDll" _
-        (ByVal JobNo As Integer, ByVal InputAddr As String, ByVal InputFormat As Integer, ByVal OutputAddr As String, ByVal OutputFormat As Integer, ByVal PageNo As Integer) As Integer
-    ' Convert a TIF or PDF file to a memory mapped file handle
-    Declare Ansi Function TOCRConvertFormat Lib "TOCRDll" _
-        (ByVal JobNo As Integer, ByVal InputAddr As String, ByVal InputFormat As Integer, ByRef OutputAddr As System.IntPtr, ByVal OutputFormat As Integer, ByVal PageNo As Integer) As Integer
+    Declare Ansi Function TOCRPopulateCharStatusMap Lib "TOCRDll" _
+            (ByRef p_lang_opts As TOCRLANGUAGEOPTIONS_EG, ByRef p_usercharvalid As TOCRCHAROPTIONS_EG) As Integer
 
     ' These functions cannot be used to get/set the log file name in x64
     Declare Function TOCRSetConfig Lib "TOCRDll" _
@@ -304,11 +353,29 @@ Module TOCRDeclares
     Declare Function TOCRGetConfig Lib "TOCRDll" _
         (ByVal JobNo As Integer, ByVal Parameter As Integer, ByRef Value As Integer) As Integer
 
+    ' Convert a TIF or PDF file to a memory mapped file handle
+    Declare Ansi Function TOCRConvertFormat Lib "TOCRDll" _
+        (ByVal JobNo As Integer, ByVal InputAddr As String, ByVal InputFormat As Integer, ByRef OutputAddr As System.IntPtr, ByVal OutputFormat As Integer, ByVal PageNo As Integer) As Integer
+
+    ' Convert a TIF or PDF file to a bitmap file
+    Declare Ansi Function TOCRConvertFormatHelper Lib "TOCRDll" _
+        (ByVal JobNo As Integer, ByVal InputAddr As String, ByVal InputFormat As Integer, ByVal OutputAddr As String, ByVal OutputFormat As Integer, ByVal PageNo As Integer) As Integer
+
+
     ' These functions can be used to get/set the log file name in x64
     Declare Ansi Function TOCRSetConfigStr Lib "TOCRDll" _
         (ByVal JobNo As Integer, ByVal Parameter As Integer, ByVal Value As String) As Integer
     Declare Ansi Function TOCRGetConfigStr Lib "TOCRDll" _
-        (ByVal JobNo As Integer, ByVal Parameter As Integer, ByVal Value As String) As Integer
+        (ByVal JobNo As Integer, ByVal Parameter As Integer, ByVal Value As System.Text.StringBuilder) As Integer
+    ' Deprecated - use StringBuilder rather thsn String
+    ' Declare Ansi Function TOCRGetConfigStr Lib "TOCRDll" _
+    '    (ByVal JobNo As Integer, ByVal Parameter As Integer, ByVal Value As String) As Integer
+
+    Declare Ansi Function TOCRGetFontName Lib "TOCRDll" _
+        (ByVal JobNo As Integer, ByVal FontID As Integer, ByVal FontName As System.Text.StringBuilder) As Integer
+
+    Declare Ansi Function TOCRExtraInfGetMMF Lib "TOCRDll" _
+        (ByVal JobNo As Integer, ByVal ExtraInfFlag As Integer, ByRef MMF As System.IntPtr) As Integer
 
     Declare Function TOCRTWAINAcquire Lib "TOCRDll" _
         (ByRef NumberOfImages As Integer) As Integer
@@ -322,9 +389,26 @@ Module TOCRDeclares
     Declare Function TOCRTWAINShowUI Lib "TOCRDll" _
         (ByVal Show As Short) As Integer
 
+    ' Deprecated - use StringBuilder rather than String
+    ' Declare Ansi Function TOCRGetJobStatusMsg Lib "TOCRDll" _
+    '    (ByVal JobNo As Integer, ByVal Msg As String) As Integer
+
+    ' Convert a TIF file to a bitmap file
+    Declare Ansi Function TOCRConvertFormat Lib "TOCRDll" _
+        (ByVal JobNo As Integer, ByVal InputAddr As String, ByVal InputFormat As Integer, ByVal OutputAddr As String, ByVal OutputFormat As Integer, ByVal PageNo As Integer) As Integer
+
+
 #End Region
 
 #Region " SUPERSEDED Declares "
+#If SUPERSEDED Then
+    ' Superseded by TOCRGetConfig
+    Declare Function TOCRGetErrorMode Lib "TOCRDll" _
+        (ByVal JobNo As Integer, ByRef ErrorMode As Integer) As Integer
+
+    ' Superseded by TOCRSetConfig
+    Declare Function TOCRSetErrorMode Lib "TOCRDll" _
+        (ByVal JobNo As Integer, ByVal ErrorMode As Integer) As Integer
 
     ' Superseded by TOCRDoJob_EG
     Declare Function TOCRDoJob2 Lib "TOCRDll" _
@@ -334,21 +418,17 @@ Module TOCRDeclares
     Declare Function TOCRDoJob Lib "TOCRDll" _
         (ByVal JobNo As Integer, ByRef JobInfo As TOCRJOBINFO) As Integer
 
-    ' Superseded by TOCRGetJobResultsEx_EG Mode
+    ' Superseded by TOCRGetJobStatusEx2
+    Declare Function TOCRGetJobStatusEx Lib "TOCRDll" _
+        (ByVal JobNo As Integer, ByRef JobStatus As Integer, ByRef Progress As Single, ByRef AutoOrientation As Integer) As Integer
+
+    ' Superseded by TOCRGetJobResultsEx_EG
     Declare Function TOCRGetJobResults Lib "TOCRDll" _
         (ByVal JobNo As Integer, ByRef ResultsInf As Integer, ByVal Bytes As System.IntPtr) As Integer
 
     ' Superseded by TOCRGetJobResultsEx_EG
     Declare Function TOCRGetJobResultsEx Lib "TOCRDll" _
         (ByVal JobNo As Integer, ByVal Mode As Integer, ByRef ResultsInf As Integer, ByVal Bytes As System.IntPtr) As Integer
-
-    ' Superseded by TOCRGetConfig
-    Declare Function TOCRGetErrorMode Lib "TOCRDll" _
-        (ByVal JobNo As Integer, ByRef ErrorMode As Integer) As Integer
-
-    ' Superseded by TOCRSetConfig
-    Declare Function TOCRSetErrorMode Lib "TOCRDll" _
-        (ByVal JobNo As Integer, ByVal ErrorMode As Integer) As Integer
 
     ' UNTESTED REDUNDANT - use the Bitmap class in .NET
     'Declare Function TOCRRotateMonoBitmap Lib "TOCRDll" _
@@ -361,7 +441,7 @@ Module TOCRDeclares
     ' UNTESTED - Superseded by TOCRGetLicenceInfoEx
     'Declare Function TOCRGetLicenceInfo Lib "TOCRDll" _
     '    (ByRef NumOfJobSlots As Integer, ByRef Volume As Integer, ByRef Time As Integer, ByRef Remaining As Integer) As Integer
-
+#End If
 #End Region
 
 #Region " User constants "
@@ -383,7 +463,7 @@ Module TOCRDeclares
     Public Const TOCRSHUTDOWNALL As Integer = -1        ' stop and shutdown processing for all jobs
 
     ' Values returned by TOCRGetJobStatus JobStatus
-    Public Const TOCRJOBSTATUS_ERROR As Integer = -1    ' an error ocurred
+    Public Const TOCRJOBSTATUS_ERROR As Integer = -1    ' an error ocurred processing the last job
     Public Const TOCRJOBSTATUS_BUSY As Integer = 0      ' the job is still processing
     Public Const TOCRJOBSTATUS_DONE As Integer = 1      ' the job completed successfully
     Public Const TOCRJOBSTATUS_IDLE As Integer = 2      ' no job has been specified yet
@@ -430,10 +510,9 @@ Module TOCRDeclares
     Public Const TOCRJOBCC_RED As Integer = 6               ' R
     Public Const TOCRJOBCC_GREEN As Integer = 7             ' G
     Public Const TOCRJOBCC_BLUE As Integer = 8              ' B
-
-    ' Settings for TOCRJOBINFO_EG.PROCESSOPTIONS_EG.CGAlgorithm (Greyscale Conversion Algorithm)
-    Public Const TOCRJOBCG_HISTOGRAM As Integer = 9
-    Public Const TOCRJOBCG_REGIONS As Integer = 10
+    Public Const TOCRJOBCC_HISTOGRAM As Integer = 9         ' Need equation
+    Public Const TOCRJOBCC_REGIONS As Integer = 10          ' Need equation
+    Public Const TOCRJOBCC_MEAN As Integer = 11             ' Need equation
 
     ' Flags for TOCRJOBINFO_EG.PROCESSOPTIONS_EG.ExtraInfFlags
     Public Const TOCREXTRAINF_RETURNBITMAP1 As Byte = 1
@@ -467,6 +546,7 @@ Module TOCRDeclares
     ' Flags returned by TOCRResultsEx_EG.Item().FontStyleInfo
     Public Const TOCRRESULTSFONT_NOTSET As UShort = 0   ' character tyle is not specified
     Public Const TOCRRESULTSFONT_NORMAL As UShort = 1   ' character is Normal
+    'Public Const TOCRRESULTSFONT_BOLD As UShort = 2     ' character is Bold - removed for v5
     Public Const TOCRRESULTSFONT_ITALIC As UShort = 2   ' character is Italic
     Public Const TOCRRESULTSFONT_UNDERLINE As UShort = 4 ' character is Underlined
 
@@ -506,7 +586,6 @@ Module TOCRDeclares
 #Region " Error Codes "
     Public Const TOCR_OK As Integer = 0
 
-    ' Error codes returned by an API function
     'Public Const TOCRERR_ILLEGALJOBNO As Integer = 1
     'Public Const TOCRERR_FAILLOCKDB As Integer = 2
     'Public Const TOCRERR_NOFREEJOBSLOTS As Integer = 3
@@ -529,6 +608,7 @@ Module TOCRDeclares
     'Public Const TOCRERR_FAILCONVERT As Integer = 23
     'Public Const TOCRERR_FAILSETCONFIG As Integer = 24
     'Public Const TOCRERR_FAILGETCONFIG As Integer = 25
+    'Public Const TOCRERR_FAILGETJOBSTATUS4 As Integer = 26
 
     'Public Const TOCRERR_FAILDOJOB1 As Integer = 30
     'Public Const TOCRERR_FAILDOJOB2 As Integer = 31
@@ -566,7 +646,7 @@ Module TOCRDeclares
 
     'Public Const TOCRERR_FAILROTATEBITMAP As Integer = 70
 
-    'Public Const TOCERR_TWAINPARTIALACQUIRE As Integer = 80
+    Public Const TOCERR_TWAINPARTIALACQUIRE As Integer = 80
     'Public Const TOCERR_TWAINFAILEDACQUIRE As Integer = 81
     'Public Const TOCERR_TWAINNOIMAGES As Integer = 82
     'Public Const TOCERR_TWAINSELECTDSFAILED As Integer = 83
@@ -576,222 +656,12 @@ Module TOCRDeclares
     'Public Const TOCRERR_FAILGETMMF As Integer = 90
     'Public Const TOCRERR_MMFNOTAVAILABLE As Integer = 91
 
-    'Public Const TOCRERR_PDFEXTRACTOR As Integer = 95
-    'Public Const TOCRERR_PDFERROR2 As Integer = 96
-    'Public Const TOCRERR_PDFARCHIVER As Integer = 97
+    Public Const TOCRERR_PDFEXTRACTOR As Integer = 95
+    Public Const TOCRERR_PDFERROR2 As Integer = 96
+    Public Const TOCRERR_PDFARCHIVER As Integer = 97
 
 
     'Public Const TOCRERR_FONTSNOTLOADED As Integer = -2
-
-    '' Error codes which may be seen in a msgbox or console but will not be returned by an API function
-    'Public Const TOCRERR_INVALIDSERVICESTART As Integer = 1000
-    'Public Const TOCRERR_FAILSERVICEINIT As Integer = 1001
-    'Public Const TOCRERR_FAILLICENCE1 As Integer = 1002
-    'Public Const TOCRERR_FAILSERVICESTART As Integer = 1003
-    'Public Const TOCRERR_UNKNOWNCMD As Integer = 1004
-    'Public Const TOCRERR_FAILREADCOMMAND As Integer = 1005
-    'Public Const TOCRERR_FAILREADOPTIONS As Integer = 1006
-    'Public Const TOCRERR_FAILWRITEJOBSTATUS1 As Integer = 1007
-    'Public Const TOCRERR_FAILWRITEJOBSTATUS2 As Integer = 1008
-    'Public Const TOCRERR_FAILWRITETHREADH As Integer = 1009
-    'Public Const TOCRERR_FAILREADJOBINFO1 As Integer = 1010
-    'Public Const TOCRERR_FAILREADJOBINFO2 As Integer = 1011
-    'Public Const TOCRERR_FAILREADJOBINFO3 As Integer = 1012
-    'Public Const TOCRERR_FAILWRITEPROGRESS As Integer = 1013
-    'Public Const TOCRERR_FAILWRITEJOBSTATUSMSG As Integer = 1014
-    'Public Const TOCRERR_FAILWRITERESULTSSIZE As Integer = 1015
-    'Public Const TOCRERR_FAILWRITERESULTS As Integer = 1016
-    'Public Const TOCRERR_FAILWRITEAUTOORIENT As Integer = 1017
-    'Public Const TOCRERR_FAILLICENCE2 As Integer = 1018
-    'Public Const TOCRERR_FAILLICENCE3 As Integer = 1019
-
-    'Public Const TOCRERR_TOOMANYCOLUMNS As Integer = 1020
-    'Public Const TOCRERR_TOOMANYROWS As Integer = 1021
-    'Public Const TOCRERR_EXCEEDEDMAXZONE As Integer = 1022
-    'Public Const TOCRERR_NSTACKTOOSMALL As Integer = 1023
-    'Public Const TOCRERR_ALGOERR1 As Integer = 1024
-    'Public Const TOCRERR_ALGOERR2 As Integer = 1025
-    'Public Const TOCRERR_EXCEEDEDMAXCP As Integer = 1026
-    'Public Const TOCRERR_CANTFINDPAGE As Integer = 1027
-    'Public Const TOCRERR_UNSUPPORTEDIMAGETYPE As Integer = 1028
-    'Public Const TOCRERR_IMAGETOOWIDE As Integer = 1029
-    'Public Const TOCRERR_IMAGETOOLONG As Integer = 1030
-    'Public Const TOCRERR_UNKNOWNJOBTYPE2 As Integer = 1031
-    'Public Const TOCRERR_TOOWIDETOROT As Integer = 1032
-    'Public Const TOCRERR_TOOLONGTOROT As Integer = 1033
-    'Public Const TOCRERR_INVALIDPAGENO As Integer = 1034
-    'Public Const TOCRERR_FAILREADJOBTYPENUMBYTES As Integer = 1035
-    'Public Const TOCRERR_FAILREADFILENAME As Integer = 1036
-    'Public Const TOCRERR_FAILSENDNUMPAGES As Integer = 1037
-    'Public Const TOCRERR_FAILOPENCLIP As Integer = 1038
-    'Public Const TOCRERR_NODIBONCLIP As Integer = 1039
-    'Public Const TOCRERR_FAILREADDIBCLIP As Integer = 1040
-    'Public Const TOCRERR_FAILLOCKDIBCLIP As Integer = 1041
-    'Public Const TOCRERR_UNKOWNDIBFORMAT As Integer = 1042
-    'Public Const TOCRERR_FAILREADDIB As Integer = 1043
-    'Public Const TOCRERR_NOXYPPM As Integer = 1044
-    'Public Const TOCRERR_FAILCREATEDIB As Integer = 1045
-    'Public Const TOCRERR_FAILWRITEDIBCLIP As Integer = 1046
-    'Public Const TOCRERR_FAILALLOCMEMDIB As Integer = 1047
-    'Public Const TOCRERR_FAILLOCKMEMDIB As Integer = 1048
-    'Public Const TOCRERR_FAILCREATEFILE As Integer = 1049
-    'Public Const TOCRERR_FAILOPENFILE1 As Integer = 1050
-    'Public Const TOCRERR_FAILOPENFILE2 As Integer = 1051
-    'Public Const TOCRERR_FAILOPENFILE3 As Integer = 1052
-    'Public Const TOCRERR_FAILOPENFILE4 As Integer = 1053
-    'Public Const TOCRERR_FAILREADFILE1 As Integer = 1054
-    'Public Const TOCRERR_FAILREADFILE2 As Integer = 1055
-    'Public Const TOCRERR_FAILFINDDATA1 As Integer = 1056
-    'Public Const TOCRERR_TIFFERROR1 As Integer = 1057
-    'Public Const TOCRERR_TIFFERROR2 As Integer = 1058
-    'Public Const TOCRERR_TIFFERROR3 As Integer = 1059
-    'Public Const TOCRERR_TIFFERROR4 As Integer = 1060
-    'Public Const TOCRERR_FAILREADDIBHANDLE As Integer = 1061
-    'Public Const TOCRERR_PAGETOOBIG As Integer = 1062
-    'Public Const TOCRERR_FAILSETTHREADPRIORITY As Integer = 1063
-    'Public Const TOCRERR_FAILSETSRVERRORMODE As Integer = 1064
-    'Public Const TOCRERR_FAILSENDFONT1 As Integer = 1065
-    'Public Const TOCRERR_FAILSENDFONT2 As Integer = 1066
-    'Public Const TOCRERR_FAILSENDFONT3 As Integer = 1067
-    'Public Const TOCRERR_FAILALLOCFONTMEM As Integer = 1068
-    'Public Const TOCRERR_FAILWRITEEXTRAINF As Integer = 1069
-
-    'Public Const TOCRERR_FAILREADFILENAME1 As Integer = 1070
-    'Public Const TOCRERR_FAILREADFILENAME2 As Integer = 1071
-    'Public Const TOCRERR_FAILREADFILENAME3 As Integer = 1072
-    'Public Const TOCRERR_FAILREADFILENAME4 As Integer = 1073
-    'Public Const TOCRERR_FAILREADFILENAME5 As Integer = 1074
-
-    'Public Const TOCRERR_FAILREADFORMAT1 As Integer = 1080
-    'Public Const TOCRERR_FAILREADFORMAT2 As Integer = 1081
-
-    'Public Const TOCRERR_FAILALLOCMEM1 As Integer = 1101
-    'Public Const TOCRERR_FAILALLOCMEM2 As Integer = 1102
-    'Public Const TOCRERR_FAILALLOCMEM3 As Integer = 1103
-    'Public Const TOCRERR_FAILALLOCMEM4 As Integer = 1104
-    'Public Const TOCRERR_FAILALLOCMEM5 As Integer = 1105
-    'Public Const TOCRERR_FAILALLOCMEM6 As Integer = 1106
-    'Public Const TOCRERR_FAILALLOCMEM7 As Integer = 1107
-    'Public Const TOCRERR_FAILALLOCMEM8 As Integer = 1108
-    'Public Const TOCRERR_FAILALLOCMEM9 As Integer = 1109
-    'Public Const TOCRERR_FAILALLOCMEM10 As Integer = 1110
-
-    'Public Const TOCRERR_FAILWRITEMMFH As Integer = 1150
-    'Public Const TOCRERR_FAILREADACK As Integer = 1151
-    'Public Const TOCRERR_FAILFILEMAP As Integer = 1152
-    'Public Const TOCRERR_FAILFILEVIEW As Integer = 1153
-    'Public Const TOCRERR_FAILSENDBMP As Integer = 1154
-
-    'Public Const TOCRERR_FAILREADFILE3 As Integer = 1155
-    'Public Const TOCRERR_FAILREADFILE4 As Integer = 1156
-
-    'Public Const TOCRERR_PDFERROR1 As Integer = 1157
-
-    'Public Const TOCRERR_BUFFEROVERFLOW1 As Integer = 2001
-
-    'Public Const TOCRERR_MAPOVERFLOW As Integer = 2002
-    'Public Const TOCRERR_REBREAKNEXTCALL As Integer = 2003
-    'Public Const TOCRERR_REBREAKNEXTDATA As Integer = 2004
-    'Public Const TOCRERR_REBREAKEXACTCALL As Integer = 2005
-    'Public Const TOCRERR_MAXZCANOVERFLOW1 As Integer = 2006
-    'Public Const TOCRERR_MAXZCANOVERFLOW2 As Integer = 2007
-    'Public Const TOCRERR_BUFFEROVERFLOW2 As Integer = 2008
-    'Public Const TOCRERR_NUMKCOVERFLOW As Integer = 2009
-    'Public Const TOCRERR_BUFFEROVERFLOW3 As Integer = 2010
-    'Public Const TOCRERR_BUFFEROVERFLOW4 As Integer = 2011
-    'Public Const TOCRERR_SEEDERROR As Integer = 2012
-
-    'Public Const TOCRERR_FCZYREF As Integer = 2020
-    'Public Const TOCRERR_MAXTEXTLINES1 As Integer = 2021
-    'Public Const TOCRERR_LINEINDEX As Integer = 2022
-    'Public Const TOCRERR_MAXFCZSONLINE As Integer = 2023
-    'Public Const TOCRERR_MEMALLOC1 As Integer = 2024
-    'Public Const TOCRERR_MERGEBREAK As Integer = 2025
-
-    'Public Const TOCRERR_DKERNPRANGE1 As Integer = 2030
-    'Public Const TOCRERR_DKERNPRANGE2 As Integer = 2031
-    'Public Const TOCRERR_BUFFEROVERFLOW5 As Integer = 2032
-    'Public Const TOCRERR_BUFFEROVERFLOW6 As Integer = 2033
-
-    'Public Const TOCRERR_FILEOPEN1 As Integer = 2040
-    'Public Const TOCRERR_FILEOPEN2 As Integer = 2041
-    'Public Const TOCRERR_FILEOPEN3 As Integer = 2042
-    'Public Const TOCRERR_FILEREAD1 As Integer = 2043
-    'Public Const TOCRERR_FILEREAD2 As Integer = 2044
-    'Public Const TOCRERR_SPWIDZERO As Integer = 2045
-    'Public Const TOCRERR_FAILALLOCMEMLEX1 As Integer = 2046
-    'Public Const TOCRERR_FAILALLOCMEMLEX2 As Integer = 2047
-
-    'Public Const TOCRERR_BADOBWIDTH As Integer = 2050
-    'Public Const TOCRERR_BADROTATION As Integer = 2051
-
-    'Public Const TOCRERR_REJHIDMEMALLOC As Integer = 2055
-
-    'Public Const TOCRERR_UIDA As Integer = 2070
-    'Public Const TOCRERR_UIDB As Integer = 2071
-    'Public Const TOCRERR_ZEROUID As Integer = 2072
-    'Public Const TOCRERR_CERTAINTYDBNOTINIT As Integer = 2073
-    'Public Const TOCRERR_MEMALLOCINDEX As Integer = 2074
-    'Public Const TOCRERR_CERTAINTYDB_INIT As Integer = 2075
-    'Public Const TOCRERR_CERTAINTYDB_DELETE As Integer = 2076
-    'Public Const TOCRERR_CERTAINTYDB_INSERT1 As Integer = 2077
-    'Public Const TOCRERR_CERTAINTYDB_INSERT2 As Integer = 2078
-    'Public Const TOCRERR_OPENXORNEAREST As Integer = 2079
-    'Public Const TOCRERR_XORNEAREST As Integer = 2079
-
-    'Public Const TOCRERR_OPENSETTINGS As Integer = 2080
-    'Public Const TOCRERR_READSETTINGS1 As Integer = 2081
-    'Public Const TOCRERR_READSETTINGS2 As Integer = 2082
-    'Public Const TOCRERR_BADSETTINGS As Integer = 2083
-    'Public Const TOCRERR_WRITESETTINGS As Integer = 2084
-    'Public Const TOCRERR_MAXSCOREDIFF As Integer = 2085
-
-    'Public Const TOCRERR_YDIMREFZERO1 As Integer = 2090
-    'Public Const TOCRERR_YDIMREFZERO2 As Integer = 2091
-    'Public Const TOCRERR_YDIMREFZERO3 As Integer = 2092
-    'Public Const TOCRERR_ASMFILEOPEN As Integer = 2093
-    'Public Const TOCRERR_ASMFILEREAD As Integer = 2094
-    'Public Const TOCRERR_MEMALLOCASM As Integer = 2095
-    'Public Const TOCRERR_MEMREALLOCASM As Integer = 2096
-    'Public Const TOCRERR_SDBFILEOPEN As Integer = 2097
-    'Public Const TOCRERR_SDBFILEREAD As Integer = 2098
-    'Public Const TOCRERR_SDBFILEBAD1 As Integer = 2099
-    'Public Const TOCRERR_SDBFILEBAD2 As Integer = 2100
-    'Public Const TOCRERR_MEMALLOCSDB As Integer = 2101
-    'Public Const TOCRERR_DEVEL1 As Integer = 2102
-    'Public Const TOCRERR_DEVEL2 As Integer = 2103
-    'Public Const TOCRERR_DEVEL3 As Integer = 2104
-    'Public Const TOCRERR_DEVEL4 As Integer = 2105
-    'Public Const TOCRERR_DEVEL5 As Integer = 2106
-    'Public Const TOCRERR_DEVEL6 As Integer = 2107
-    'Public Const TOCRERR_DEVEL7 As Integer = 2108
-    'Public Const TOCRERR_DEVEL8 As Integer = 2109
-    'Public Const TOCRERR_DEVEL9 As Integer = 2110
-    'Public Const TOCRERR_DEVEL10 As Integer = 2111
-    'Public Const TOCRERR_DEVEL11 As Integer = 2112
-    'Public Const TOCRERR_DEVEL12 As Integer = 2113
-    'Public Const TOCRERR_DEVEL13 As Integer = 2114
-    'Public Const TOCRERR_FILEOPEN4 As Integer = 2115
-    'Public Const TOCRERR_FILEOPEN5 As Integer = 2116
-    'Public Const TOCRERR_FILEOPEN6 As Integer = 2117
-    'Public Const TOCRERR_FILEREAD3 As Integer = 2118
-    'Public Const TOCRERR_FILEREAD4 As Integer = 2119
-    'Public Const TOCRERR_ZOOMGTOOBIG As Integer = 2120
-    'Public Const TOCRERR_ZOOMGOUTOFRANGE As Integer = 2121
-
-    'Public Const TOCRERR_MEMALLOCRESULTS As Integer = 2130
-
-    'Public Const TOCRERR_MEMALLOCHEAP As Integer = 2140
-    'Public Const TOCRERR_HEAPNOTINITIALISED As Integer = 2141
-    'Public Const TOCRERR_MEMLIMITHEAP As Integer = 2142
-    'Public Const TOCRERR_MEMREALLOCHEAP As Integer = 2143
-    'Public Const TOCRERR_MEMALLOCFCZBM As Integer = 2144
-    'Public Const TOCRERR_FCZBMOVERLAP As Integer = 2145
-    'Public Const TOCRERR_FCZBMLOCATION As Integer = 2146
-    'Public Const TOCRERR_MEMREALLOCFCZBM As Integer = 2147
-    'Public Const TOCRERR_MEMALLOCFCHBM As Integer = 2148
-    'Public Const TOCRERR_MEMREALLOCFCHBM As Integer = 2149
-
 #End Region
 
 End Module

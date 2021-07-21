@@ -4,12 +4,12 @@
 ' EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
 ' WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
 '
-' This program demonstrates calling TOCR version 4.0 from VB.NET.
+' This program demonstrates calling TOCR version 5.1 from VB.NET.
 '
-' Copyright (C) 2012 Transym Computer Services Ltd.
+' Copyright (C) 2021 Transym Computer Services Ltd.
 '
 '
-' TOCR4.0DemoVB.NET Issue1
+' TOCR5.1DemoVB.NET
 
 Option Strict On
 Option Explicit On 
@@ -21,83 +21,22 @@ Module Main
 #If PLATFORM = "x64" Then
     Private mSample_TIF_file As String = Application.StartupPath & "\..\..\..\Sample.tif"
     Private mSample_BMP_file As String = Application.StartupPath & "\..\..\..\Sample.bmp"
+    Private mSample_PDF_file As String = Application.StartupPath & "\..\..\..\Sample.pdf"
 #Else
     Private mSample_TIF_file As String = Application.StartupPath & "\..\..\Sample.tif"
     Private mSample_BMP_file As String = Application.StartupPath & "\..\..\Sample.bmp"
+    Private mSample_PDF_file As String = Application.StartupPath & "\..\..\Sample.pdf"
 #End If
 
-#Region " SDK Declares "
-    Private Const DIB_RGB_COLORS As Integer = 0
-    Private Const BI_RGB As Integer = 0
-    Private Const BI_BITFIELDS As Integer = 3
-    Private Const PAGE_READWRITE As Integer = 4
-    Private Const FILE_MAP_WRITE As Integer = 2
-    Private Const SRCCOPY As Integer = &HCC0020&
-
-    <StructLayout(LayoutKind.Sequential, pack:=4)> _
-    Structure RGBQUAD
-        Dim rgbBlue As Byte
-        Dim rgbGreen As Byte
-        Dim rgbRed As Byte
-        Dim rgbReserved As Byte
-    End Structure ' RGBQUAD
-
-    <StructLayout(LayoutKind.Sequential, pack:=4)> _
-    Structure BITMAPINFOHEADER
-        Dim biSize As Integer
-        Dim biWidth As Integer
-        Dim biHeight As Integer
-        Dim biPlanes As Short
-        Dim biBitCount As Short
-        Dim biCompression As Integer
-        Dim biSizeImage As Integer
-        Dim biXPelsPerMeter As Integer
-        Dim biYPelsPerMeter As Integer
-        Dim biClrUsed As Integer
-        Dim biClrImportant As Integer
-    End Structure ' BITMAPINFOHEADER
-
-
-    <StructLayout(LayoutKind.Sequential, pack:=4)> _
-    Structure BITMAPINFO
-        Dim bmih As BITMAPINFOHEADER
-        <VBFixedArray(2), MarshalAs(UnmanagedType.ByValArray, SizeConst:=2)> _
-        Public cols As UInt32()
-    End Structure ' BITMAPINFO
-
-    Private Declare Function CloseHandle Lib "kernel32.dll" (ByVal handle As IntPtr) As Boolean
-    Private Declare Function CreateFileMappingMy Lib "kernel32" Alias "CreateFileMappingA" (ByVal hFile As Integer, ByVal lpFileMappigAttributes As Integer, ByVal flProtect As Integer, ByVal dwMaximumSizeHigh As Integer, ByVal dwMaximumSizeLow As Integer, ByVal lpName As Integer) As IntPtr
-    Private Declare Function MapViewOfFileMy Lib "kernel32" Alias "MapViewOfFile" (ByVal hFileMappingObject As IntPtr, ByVal dwDesiredAccess As Long, ByVal dwFileOffsetHigh As Integer, ByVal dwFileOffsetLow As Integer, ByVal dwNumberOfBytesToMap As Integer) As IntPtr
-    Private Declare Function UnmapViewOfFileMy Lib "kernel32" Alias "UnmapViewOfFile" (ByVal lpBaseAddress As IntPtr) As Long
-    Private Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (ByVal lpvDest As Integer, ByVal lpvSrc As IntPtr, ByVal cbCopy As Integer)
-    Private Declare Function GlobalLock Lib "kernel32" (ByVal hMem As IntPtr) As IntPtr
-    Private Declare Function GlobalUnlock Lib "kernel32" (ByVal hMem As IntPtr) As Integer
-    Private Declare Function GlobalFree Lib "kernel32" (ByVal hMem As IntPtr) As Integer
-
-    Private Declare Function DeleteObject Lib "gdi32.dll" (ByVal hObject As IntPtr) As Boolean
-    Private Declare Function GetDC Lib "user32.dll" (ByVal hWnd As IntPtr) As IntPtr
-    Private Declare Function CreateCompatibleDC Lib "gdi32.dll" (ByVal hRefDC As IntPtr) As IntPtr
-
-    Private Declare Function ReleaseDC Lib "user32.dll" (ByVal hWnd As IntPtr, ByVal hDC As IntPtr) As Boolean
-    Private Declare Function DeleteDC Lib "gdi32.dll" (ByVal hdc As IntPtr) As Boolean
-    Private Declare Function SelectObject Lib "gdi32.dll" (ByVal hdc As IntPtr, ByVal hObject As IntPtr) As IntPtr
-    Private Declare Function BitBlt Lib "gdi32.dll" (ByVal hdc As IntPtr, ByVal nXDest As Integer, ByVal nYDest As Integer, ByVal nWidth As Integer, ByVal nHeight As Integer, ByVal hdcSrc As IntPtr, ByVal nXSrc As Integer, ByVal nYSrc As Integer, ByVal dwRop As Integer) As Boolean
-    Private Declare Function CreateDIBSection Lib "gdi32.dll" (ByVal hdc As IntPtr, ByRef pbmi As BITMAPINFO, ByVal iUsage As UInt32, ByRef ppvBits As IntPtr, ByVal hSection As IntPtr, ByVal dwOffset As UInt32) As IntPtr
-
-#End Region
-
-
     Sub Main()
-
         Example1() ' Demonstrates how to OCR a file
         Example2() ' Demonstrates how to OCR multiple files
-        Example3() ' Demonstrates how to OCR an image using a memory mapped file created by TOCR
+        Example3() ' Demonstrates how to OCR an image using a memory mapped file created by TOCR & Demonstrates TOCRRESULTS_EG
         Example4() ' Demonstrates how to OCR an image using a memory mapped file created here
         Example5() ' Retrieve information on Job Slot usage
         Example6() ' Retrieve information on Job Slots
         Example7() ' Get images from a TWAIN compatible device
         Example8() ' Demonstrates TOCRSetConfig and TOCRGetConfig
-
     End Sub
 
     ' Demonstrates how to OCR a file
@@ -105,26 +44,26 @@ Module Main
 
         Dim Status As Integer
         Dim JobNo As Integer
-        Dim JobInfo2 As New TOCRJOBINFO2
+        Dim JobInfo_EG As New TOCRJOBINFO_EG
         Dim Answer As String = ""
-        Dim Results As New TOCRRESULTS
+        Dim Results As New TOCRRESULTS_EG
 
         TOCRSetConfig(TOCRCONFIG_DEFAULTJOB, TOCRCONFIG_DLL_ERRORMODE, TOCRERRORMODE_MSGBOX)
 
-        JobInfo2.Initialize()
+        JobInfo_EG.Initialize()
 
-        JobInfo2.InputFile = mSample_TIF_file
-        JobInfo2.JobType = TOCRJOBTYPE_TIFFFILE
-
+        JobInfo_EG.InputFile = mSample_TIF_file
+        JobInfo_EG.JobType = TOCRJOBTYPE_TIFFFILE
         ' or
-        'JobInfo2.InputFile = mSample_BMP_file
-        'JobInfo2.JobType = TOCRJOBTYPE_DIBFILE
+        'JobInfo_EG.InputFile = mSample_BMP_file
+        'JobInfo_EG.JobType = TOCRJOBTYPE_DIBFILE
+        ' or
+        'JobInfo_EG.InputFile = mSample_PDF_file
+        'JobInfo_EG.JobType = TOCRJOBTYPE_PDFFILE
 
         Status = TOCRInitialise(JobNo)
         If Status = TOCR_OK Then
-            ' or
-            'If OCRPoll(JobNo, JobInfo2) Then
-            If OCRWait(JobNo, JobInfo2) Then
+            If OCRWait(JobNo, JobInfo_EG) Then
                 If GetResults(JobNo, Results) Then
                     If FormatResults(Results, Answer) Then
                         MsgBox(Answer, MsgBoxStyle.Information, "Example 1")
@@ -141,30 +80,39 @@ Module Main
 
         Dim Status As Integer
         Dim JobNo As Integer
-        Dim JobInfo2 As New TOCRJOBINFO2
-        Dim Results As New TOCRRESULTS
+        Dim JobInfo_EG As New TOCRJOBINFO_EG
+        Dim Results As New TOCRRESULTS_EG
         Dim CountDone As Integer = 0
 
         TOCRSetConfig(TOCRCONFIG_DEFAULTJOB, TOCRCONFIG_DLL_ERRORMODE, TOCRERRORMODE_MSGBOX)
 
-        JobInfo2.Initialize()
+        JobInfo_EG.Initialize()
 
         Status = TOCRInitialise(JobNo)
         If Status = TOCR_OK Then
 
             ' 1st file
-            JobInfo2.InputFile = mSample_TIF_file
-            JobInfo2.JobType = TOCRJOBTYPE_TIFFFILE
-            If OCRWait(JobNo, JobInfo2) Then
+            JobInfo_EG.InputFile = mSample_TIF_file
+            JobInfo_EG.JobType = TOCRJOBTYPE_TIFFFILE
+            If OCRWait(JobNo, JobInfo_EG) Then
                 If GetResults(JobNo, Results) Then
                     CountDone += 1
                 End If
             End If
 
             ' 2nd file
-            JobInfo2.InputFile = mSample_BMP_file
-            JobInfo2.JobType = TOCRJOBTYPE_DIBFILE
-            If OCRWait(JobNo, JobInfo2) Then
+            JobInfo_EG.InputFile = mSample_BMP_file
+            JobInfo_EG.JobType = TOCRJOBTYPE_DIBFILE
+            If OCRWait(JobNo, JobInfo_EG) Then
+                If GetResults(JobNo, Results) Then
+                    CountDone += 1
+                End If
+            End If
+
+            ' 3rd file
+            JobInfo_EG.InputFile = mSample_PDF_file
+            JobInfo_EG.JobType = TOCRJOBTYPE_PDFFILE
+            If OCRWait(JobNo, JobInfo_EG) Then
                 If GetResults(JobNo, Results) Then
                     CountDone += 1
                 End If
@@ -172,31 +120,31 @@ Module Main
             TOCRShutdown(JobNo)
         End If
 
-        MsgBox(CountDone.ToString() & " of 2 jobs done", MsgBoxStyle.Information, "Example 2")
+        MsgBox(CountDone.ToString() & " of 3 jobs done", MsgBoxStyle.Information, "Example 2")
     End Sub ' Example 2
 
-    ' Demonstrates how to OCR an image using a memory mapped file created by TOCR
+    ' Demonstrates how to OCR an image using a memory mapped file created by TOCR & Demonstrates TOCRRESULTS_EG
     Private Sub Example3()
 
         Dim Status As Integer
         Dim JobNo As Integer
         Dim Answer As String = ""
         Dim MMFhandle As IntPtr = IntPtr.Zero
-        Dim Results As New TOCRRESULTSEX
-        Dim JobInfo2 As New TOCRJOBINFO2
+        Dim Results As New TOCRRESULTSEX_EG
+        Dim JobInfo_EG As New TOCRJOBINFO_EG
 
         TOCRSetConfig(TOCRCONFIG_DEFAULTJOB, TOCRCONFIG_DLL_ERRORMODE, TOCRERRORMODE_MSGBOX)
 
-        JobInfo2.Initialize()
+        JobInfo_EG.Initialize()
 
-        JobInfo2.JobType = TOCRJOBTYPE_MMFILEHANDLE
+        JobInfo_EG.JobType = TOCRJOBTYPE_MMFILEHANDLE
 
         Status = TOCRInitialise(JobNo)
         If Status = TOCR_OK Then
             Status = TOCRConvertFormat(JobNo, mSample_TIF_file, TOCRCONVERTFORMAT_TIFFFILE, MMFhandle, TOCRCONVERTFORMAT_MMFILEHANDLE, 0)
             If Status = TOCR_OK Then
-                JobInfo2.hMMF = MMFhandle
-                If OCRWait(JobNo, JobInfo2) Then
+                JobInfo_EG.hMMF = MMFhandle
+                If OCRWait(JobNo, JobInfo_EG) Then
                     If GetResults(JobNo, Results) Then
                         If FormatResults(Results, Answer) Then
                             MsgBox(Answer, MsgBoxStyle.Information, "Example 3")
@@ -218,10 +166,10 @@ Module Main
         Dim BMP As Bitmap
         Dim Status As Integer
         Dim JobNo As Integer
-        Dim JobInfo2 As New TOCRJOBINFO2
+        Dim JobInfo_EG As New TOCRJOBINFO_EG
         Dim Answer As String = ""
         Dim MMFhandle As IntPtr = IntPtr.Zero
-        Dim Results As New TOCRRESULTS
+        Dim Results As New TOCRRESULTS_EG
 
         BMP = New Bitmap(mSample_BMP_file)
 
@@ -232,16 +180,16 @@ Module Main
 
             TOCRSetConfig(TOCRCONFIG_DEFAULTJOB, TOCRCONFIG_DLL_ERRORMODE, TOCRERRORMODE_MSGBOX)
 
-            JobInfo2.Initialize()
+            JobInfo_EG.Initialize()
 
-            JobInfo2.JobType = TOCRJOBTYPE_MMFILEHANDLE
+            JobInfo_EG.JobType = TOCRJOBTYPE_MMFILEHANDLE
 
             Status = TOCRInitialise(JobNo)
 
             If Status = TOCR_OK Then
-                JobInfo2.hMMF = MMFhandle
+                JobInfo_EG.hMMF = MMFhandle
 
-                If OCRWait(JobNo, JobInfo2) Then
+                If OCRWait(JobNo, JobInfo_EG) Then
                     If GetResults(JobNo, Results) Then
                         If FormatResults(Results, Answer) Then
                             MsgBox(Answer, MsgBoxStyle.Information, "Example 4")
@@ -449,9 +397,8 @@ Module Main
         TOCRShutdown(JobNo)
 
     End Sub ' Example 8
-
     ' Wait for the engine to complete
-    Private Function OCRWait(ByVal JobNo As Integer, ByVal JobInfo2 As TOCRJOBINFO2) As Boolean
+    Private Function OCRWait(ByVal JobNo As Integer, ByVal JobInfo_EG As TOCRJOBINFO_EG) As Boolean
 
         Dim Status As Integer
         Dim JobStatus As Integer
@@ -459,7 +406,7 @@ Module Main
         Dim ErrorMode As Integer
 
 
-        Status = TOCRDoJob2(JobNo, JobInfo2)
+        Status = TOCRDoJob_EG(JobNo, JobInfo_EG)
         If Status = TOCR_OK Then
             Status = TOCRWaitForJob(JobNo, JobStatus)
         End If
@@ -482,7 +429,7 @@ Module Main
     End Function
 
     ' Wait for the engine to complete by polling
-    Private Function OCRPoll(ByVal JobNo As Integer, ByVal JobInfo2 As TOCRJOBINFO2) As Boolean
+    Private Function OCRPoll(ByVal JobNo As Integer, ByVal JobInfo_EG As TOCRJOBINFO_EG) As Boolean
 
         Dim Status As Integer
         Dim JobStatus As Integer
@@ -491,7 +438,7 @@ Module Main
         Dim Progress As Single
         Dim AutoOrientation As Integer
 
-        Status = TOCRDoJob2(JobNo, JobInfo2)
+        Status = TOCRDoJob_EG(JobNo, JobInfo_EG)
         If Status = TOCR_OK Then
             Do
                 'Status = TOCRGetJobStatus(JobNo, JobStatus)
@@ -522,8 +469,7 @@ Module Main
     End Function
 
     ' OVERLOADED function to retrieve the results from the service process and load into 'Results'
-    ' Remember the character numbers returned refer to the Windows character set.
-    Private Function GetResults(ByVal JobNo As Integer, ByRef Results As TOCRRESULTS) As Boolean
+    Private Function GetResults(ByVal JobNo As Integer, ByRef Results As TOCRRESULTS_EG) As Boolean
 
         Dim ResultsInf As Integer ' number of bytes needed for results
         Dim BytesGC As GCHandle
@@ -535,7 +481,7 @@ Module Main
         GetResults = False
         Results.Hdr.NumItems = 0
 
-        If TOCRGetJobResults(JobNo, ResultsInf, IntPtr.Zero) = TOCR_OK Then
+        If TOCRGetJobResultsEx_EG(JobNo, TOCRGETRESULTS_NORMAL_EG, ResultsInf, IntPtr.Zero) = TOCR_OK Then
             If ResultsInf > 0 Then
                 ReDim Bytes(ResultsInf - 1)
                 Dim s As Integer
@@ -544,16 +490,16 @@ Module Main
                 ' pin the Bytes array so that TOCRGetJobResults can write to it
                 BytesGC = GCHandle.Alloc(Bytes, GCHandleType.Pinned)
 
-                If TOCRGetJobResults(JobNo, ResultsInf, BytesGC.AddrOfPinnedObject) = TOCR_OK Then
+                If TOCRGetJobResultsEx_EG(JobNo, TOCRGETRESULTS_NORMAL_EG, ResultsInf, BytesGC.AddrOfPinnedObject) = TOCR_OK Then
                     With Results
-                        .Hdr = CType(Marshal.PtrToStructure(BytesGC.AddrOfPinnedObject, GetType(TOCRRESULTSHEADER)), TOCRRESULTSHEADER)
+                        .Hdr = CType(Marshal.PtrToStructure(BytesGC.AddrOfPinnedObject, GetType(TOCRRESULTSHEADER_EG)), TOCRRESULTSHEADER_EG)
                         If .Hdr.NumItems > 0 Then
                             ReDim .Item(.Hdr.NumItems - 1)
-                            Offset = Marshal.SizeOf(GetType(TOCRRESULTSHEADER))
+                            Offset = Marshal.SizeOf(GetType(TOCRRESULTSHEADER_EG))
                             For ItemNo = 0 To .Hdr.NumItems - 1
                                 AddrOfItemBytes = Marshal.UnsafeAddrOfPinnedArrayElement(Bytes, Offset)
-                                .Item(ItemNo) = CType(Marshal.PtrToStructure(AddrOfItemBytes, GetType(TOCRRESULTSITEM)), TOCRRESULTSITEM)
-                                Offset = Offset + Marshal.SizeOf(GetType(TOCRRESULTSITEM))
+                                .Item(ItemNo) = CType(Marshal.PtrToStructure(AddrOfItemBytes, GetType(TOCRRESULTSITEM_EG)), TOCRRESULTSITEM_EG)
+                                Offset = Offset + Marshal.SizeOf(GetType(TOCRRESULTSITEM_EG))
                             Next ItemNo
                         End If ' .Hdr.NumItems > 0
 
@@ -569,66 +515,71 @@ Module Main
 
     End Function
 
-    ' copy of TOCRRESULTSITEMEX without the Alt[] array 
-    Structure TOCRRESULTSITEMEXHDR
-        Dim StructId As Short
-        Dim OCRCha As Short
+    ' copy of TOCRRESULTSITEMEX_EG without the Alt[] array 
+    Private Structure TOCRRESULTSITEMEXHDR_EG
         Dim Confidence As Single
+        Dim StructId As Short
+        Dim OCRCharWUnicode As Short 'V5 split from OCRChaW
+        Dim OCRCharWInternal As Short 'V5 split from OCRChaW
+        Dim FontID As Short
+        Dim FontStyleInfo As Short
         Dim XPos As Short
         Dim YPos As Short
         Dim XDim As Short
         Dim YDim As Short
+        Dim YDimRef As Short
+        Dim Noise As Short 'V5 addition
     End Structure
 
-    ' OVERLOADED function to retrieve the results from the service process and load into 'ResultsEx'
-    ' Remember the character numbers returned refer to the Windows character set.
-    Private Function GetResults(ByVal JobNo As Integer, ByRef ResultsEx As TOCRRESULTSEX) As Boolean
-
+    ' OVERLOADED function to retrieve the extended results from the service process and load into 'Results'
+    Function GetResults(ByVal JobNo As Integer, ByRef Results As TOCRRESULTSEX_EG) As Boolean
         Dim ResultsInf As Integer ' number of bytes needed for results
-        Dim BytesGC As GCHandle
         Dim AddrOfItemBytes As System.IntPtr
-        Dim ItemNo As Integer
-        Dim AltNo As Integer
-        Dim Bytes() As Byte
-        Dim Offset As Integer
-        Dim ItemHdr As TOCRRESULTSITEMEXHDR
-
+        Dim ItemNo As Integer           ' loop counter
+        Dim AltNo As Integer            ' loop counter
+        Dim Bytes() As Byte             ' array of bytes of returned results
+        Dim BytesGC As GCHandle         ' handle ti pin Bytes()
+        Dim Offset As Integer           ' address offset into Bytes()
+        Dim ItemHdr As TOCRRESULTSITEMEXHDR_EG
 
         GetResults = False
-        ResultsEx.Hdr.NumItems = 0
-
-        If TOCRGetJobResultsEx(JobNo, TOCRGETRESULTS_EXTENDED, ResultsInf, IntPtr.Zero) = TOCR_OK Then
+        Results.Hdr.NumItems = 0
+        If TOCRGetJobResultsEx_EG(JobNo, TOCRGETRESULTS_EXTENDED_EG, ResultsInf, IntPtr.Zero) = TOCR_OK Then
             If ResultsInf > 0 Then
                 ReDim Bytes(ResultsInf - 1)
                 ' pin the Bytes array so that TOCRGetJobResultsEx can write to it
                 BytesGC = GCHandle.Alloc(Bytes, GCHandleType.Pinned)
 
-                If TOCRGetJobResultsEx(JobNo, TOCRGETRESULTS_EXTENDED, ResultsInf, BytesGC.AddrOfPinnedObject) = TOCR_OK Then
-                    With ResultsEx
-                        .Hdr = CType(Marshal.PtrToStructure(BytesGC.AddrOfPinnedObject, GetType(TOCRRESULTSHEADER)), TOCRRESULTSHEADER)
+                If TOCRGetJobResultsEx_EG(JobNo, TOCRGETRESULTS_EXTENDED_EG, ResultsInf, BytesGC.AddrOfPinnedObject) = TOCR_OK Then
+                    With Results
+                        .Hdr = CType(Marshal.PtrToStructure(BytesGC.AddrOfPinnedObject, GetType(TOCRRESULTSHEADER_EG)), TOCRRESULTSHEADER_EG)
                         If .Hdr.NumItems > 0 Then
                             ReDim .Item(.Hdr.NumItems - 1)
-                            Offset = Marshal.SizeOf(GetType(TOCRRESULTSHEADER))
+                            Offset = Marshal.SizeOf(GetType(TOCRRESULTSHEADER_EG))
                             For ItemNo = 0 To .Hdr.NumItems - 1
                                 AddrOfItemBytes = Marshal.UnsafeAddrOfPinnedArrayElement(Bytes, Offset)
-
-                                ' Cannot Marshal TOCRRESULTSITEMEX so use copy of structure header
+                                ' Cannot Marshal TOCRRESULTSITEMEX_EG so use copy of structure header
                                 ' This unfortunately means a double copy of the data
-                                ItemHdr = CType(Marshal.PtrToStructure(AddrOfItemBytes, GetType(TOCRRESULTSITEMEXHDR)), TOCRRESULTSITEMEXHDR)
+                                ItemHdr = CType(Marshal.PtrToStructure(AddrOfItemBytes, GetType(TOCRRESULTSITEMEXHDR_EG)), TOCRRESULTSITEMEXHDR_EG)
                                 With .Item(ItemNo)
                                     .Initialize()
-                                    .StructId = ItemHdr.StructId
-                                    .OCRCha = ItemHdr.OCRCha
                                     .Confidence = ItemHdr.Confidence
+                                    .StructId = ItemHdr.StructId
+                                    .OCRCharWUnicode = ItemHdr.OCRCharWUnicode
+                                    .OCRCharWInternal = ItemHdr.OCRCharWInternal
+                                    .FontID = ItemHdr.FontID
+                                    .FontStyleInfo = ItemHdr.FontStyleInfo
                                     .XPos = ItemHdr.XPos
                                     .YPos = ItemHdr.YPos
                                     .XDim = ItemHdr.XDim
                                     .YDim = ItemHdr.YDim
-                                    Offset = Offset + Marshal.SizeOf(GetType(TOCRRESULTSITEMEXHDR))
+                                    .YDimRef = ItemHdr.YDimRef
+                                    .Noise = ItemHdr.Noise
+                                    Offset = Offset + Marshal.SizeOf(GetType(TOCRRESULTSITEMEXHDR_EG))
                                     For AltNo = 0 To 4
                                         AddrOfItemBytes = Marshal.UnsafeAddrOfPinnedArrayElement(Bytes, Offset)
-                                        .Alt(AltNo) = CType(Marshal.PtrToStructure(AddrOfItemBytes, GetType(TOCRRESULTSITEMEXALT)), TOCRRESULTSITEMEXALT)
-                                        Offset = Offset + Marshal.SizeOf(GetType(TOCRRESULTSITEMEXALT))
+                                        .Alt(AltNo) = CType(Marshal.PtrToStructure(AddrOfItemBytes, GetType(TOCRRESULTSITEMEXALT_EG)), TOCRRESULTSITEMEXALT_EG)
+                                        Offset = Offset + Marshal.SizeOf(GetType(TOCRRESULTSITEMEXALT_EG))
                                     Next AltNo
                                 End With
                             Next ItemNo
@@ -637,17 +588,17 @@ Module Main
                         GetResults = True
 
                     End With ' results
-                End If ' TOCRGetJobResults(JobNo, ResultsInf, Bytes(0)) = TOCR_OK
+                End If ' TOCRGetJobResults_EG(JobNo, ResultsInf, Bytes(0)) = TOCR_OK
 
                 BytesGC.Free()
 
             End If ' ResultsInf > 0
-        End If ' TOCRGetJobResults(JobNo, ResultsInf, 0) = TOCR_OK
+        End If ' TOCRGetJobResults_EG(JobNo, ResultsInf, 0) = TOCR_OK
 
     End Function
 
     'OVERLOADED function to convert results to a string
-    Private Function FormatResults(ByVal Results As TOCRRESULTS, ByRef Answer As String) As Boolean
+    Private Function FormatResults(ByVal Results As TOCRRESULTS_EG, ByRef Answer As String) As Boolean
 
         Dim ItemNo As Integer
 
@@ -657,10 +608,10 @@ Module Main
         With Results
             If .Hdr.NumItems > 0 Then
                 For ItemNo = 0 To .Hdr.NumItems - 1
-                    If Chr(.Item(ItemNo).OCRCha) = vbCr Then
+                    If ChrW(.Item(ItemNo).OCRCharWUnicode) = vbCr Then
                         Answer = Answer & vbCrLf
                     Else
-                        Answer = Answer & Chr(.Item(ItemNo).OCRCha)
+                        Answer = Answer & ChrW(.Item(ItemNo).OCRCharWUnicode)
                     End If
                 Next ItemNo
                 FormatResults = True
@@ -671,20 +622,20 @@ Module Main
 
     End Function
 
-    'OVERLOADED function to convert results to a string
-    Private Function FormatResults(ByVal ResultsEx As TOCRRESULTSEX, ByRef Answer As String) As Boolean
+    'OVERLOADED function to convert extended results to a string
+    Private Function FormatResults(ByVal Results As TOCRRESULTSEX_EG, ByRef Answer As String) As Boolean
 
         Dim ItemNo As Integer
 
         FormatResults = False
 
-        With ResultsEx
+        With Results
             If .Hdr.NumItems > 0 Then
                 For ItemNo = 0 To .Hdr.NumItems - 1
-                    If Chr(.Item(ItemNo).OCRCha) = vbCr Then
+                    If ChrW(.Item(ItemNo).OCRCharWUnicode) = vbCr Then
                         Answer = Answer & vbCrLf
                     Else
-                        Answer = Answer & Chr(.Item(ItemNo).OCRCha)
+                        Answer = Answer & ChrW(.Item(ItemNo).OCRCharWUnicode)
                     End If
                 Next ItemNo
                 FormatResults = True
@@ -693,361 +644,6 @@ Module Main
             End If
         End With
 
-    End Function
-
-    ' Convert a bitmap to 1bpp
-    Private Function ConvertTo1bpp(ByVal BMPIn As Bitmap) As Bitmap
-
-        Dim bmi As New BITMAPINFO
-        Dim hbmIn As IntPtr = BMPIn.GetHbitmap()
-
-        bmi.bmih.biSize = CInt(Marshal.SizeOf(bmi.bmih))
-        bmi.bmih.biWidth = BMPIn.Width
-        bmi.bmih.biHeight = BMPIn.Height
-        bmi.bmih.biPlanes = 1
-        bmi.bmih.biBitCount = 1
-        bmi.bmih.biCompression = BI_RGB
-        bmi.bmih.biSizeImage = CInt((((BMPIn.Width + 7) And &HFFFFFFF8&) >> 3) * BMPIn.Height)
-        bmi.bmih.biXPelsPerMeter = System.Convert.ToInt32(BMPIn.HorizontalResolution * 100 / 2.54)
-        bmi.bmih.biYPelsPerMeter = System.Convert.ToInt32(BMPIn.VerticalResolution * 100 / 2.54)
-        bmi.bmih.biClrUsed = 2
-        bmi.bmih.biClrImportant = 2
-        ReDim bmi.cols(1)  ' see the definition of BITMAPINFO()
-        bmi.cols(0) = Convert.ToUInt32(0)
-        bmi.cols(1) = Convert.ToUInt32(&HFFFFFF)
-
-        Dim dummy As IntPtr
-        Dim hbm As IntPtr = CreateDIBSection(IntPtr.Zero, bmi, Convert.ToUInt32(DIB_RGB_COLORS), dummy, IntPtr.Zero, Convert.ToUInt32(0))
-
-        Dim scrnDC As IntPtr = GetDC(IntPtr.Zero)
-        Dim hDCIn As IntPtr = CreateCompatibleDC(scrnDC)
-
-        SelectObject(hDCIn, hbmIn)
-        Dim hDC As IntPtr = CreateCompatibleDC(scrnDC)
-        SelectObject(hDC, hbm)
-
-        BitBlt(hDC, 0, 0, BMPIn.Width, BMPIn.Height, hDCIn, 0, 0, SRCCOPY)
-
-        Dim BMP As Bitmap = Bitmap.FromHbitmap(hbm)
-
-        DeleteDC(hDCIn)
-        DeleteDC(hDC)
-        ReleaseDC(IntPtr.Zero, scrnDC)
-        DeleteObject(hbmIn)
-        DeleteObject(hbm)
-
-        Return BMP
-
-    End Function
-
-    ' Convert a bitmap to a memory mapped file.
-    ' It does this by constructing a GDI bitmap in a byte array and copying this to a memory mapped file.
-    Private Function ConvertBitmapToMMF(ByVal BMPIn As Bitmap, _
-        Optional ByVal DiscardBitmap As Boolean = True, _
-        Optional ByVal ConvertTo1Bit As Boolean = True) As IntPtr
-
-        Dim BMP As Bitmap
-        Dim BIH As BITMAPINFOHEADER
-        Dim BMPData As BitmapData
-        Dim ImageSize As Integer
-        Dim Bytes() As Byte
-        Dim BytesGC As GCHandle
-        Dim MMFsize As Integer
-        Dim PalEntries As Integer
-        Dim PalEntry As Integer
-        Dim rgb As RGBQUAD
-        Dim Offset As Integer
-        Dim MMFhandle As IntPtr = IntPtr.Zero
-        Dim MMFview As IntPtr = IntPtr.Zero
-
-        ConvertBitmapToMMF = IntPtr.Zero
-
-        If DiscardBitmap Then   ' can destroy input bitmap
-            If ConvertTo1Bit Then
-                BMP = ConvertTo1bpp(BMPIn)
-                BMPIn.Dispose()
-                BMPIn = Nothing
-            Else
-                BMP = BMPIn
-            End If
-        Else                    ' must keep input bitmap unchanged
-            If ConvertTo1Bit Then
-                BMP = ConvertTo1bpp(BMPIn)
-            Else
-                BMP = BMPIn.Clone(New Rectangle(New Point, BMPIn.Size), BMPIn.PixelFormat)
-            End If
-        End If
-
-        ' Flip the bitmap (GDI+ bitmap scan lines are top down, GDI are bottom up)
-        BMP.RotateFlip(RotateFlipType.RotateNoneFlipY)
-
-        BMPData = BMP.LockBits(New Rectangle(New Point, BMP.Size), ImageLockMode.ReadOnly, BMP.PixelFormat)
-        ImageSize = BMPData.Stride * BMP.Height
-
-        PalEntries = BMP.Palette.Entries.Length
-
-        BIH.biWidth = BMP.Width
-        BIH.biHeight = BMP.Height
-        BIH.biPlanes = 1
-        BIH.biSize = Marshal.SizeOf(BIH)
-        BIH.biClrImportant = 0
-        BIH.biCompression = BI_RGB
-        BIH.biSizeImage = ImageSize
-        BIH.biXPelsPerMeter = CInt(BMP.HorizontalResolution * 100 / 2.54)
-        BIH.biYPelsPerMeter = CInt(BMP.VerticalResolution * 100 / 2.54)
-
-        ' Most of these formats are untested and the alpha channel is ignored
-        Select Case BMP.PixelFormat
-            Case PixelFormat.Format1bppIndexed
-                BIH.biBitCount = 1
-            Case PixelFormat.Format4bppIndexed
-                BIH.biBitCount = 4
-            Case PixelFormat.Format8bppIndexed
-                BIH.biBitCount = 8
-            Case PixelFormat.Format16bppArgb1555, PixelFormat.Format16bppGrayScale, PixelFormat.Format16bppRgb555, PixelFormat.Format16bppRgb565
-                BIH.biBitCount = 16
-                PalEntries = 0
-            Case PixelFormat.Format24bppRgb
-                BIH.biBitCount = 24
-                PalEntries = 0
-            Case PixelFormat.Format32bppArgb, PixelFormat.Format32bppPArgb, PixelFormat.Format32bppRgb
-                BIH.biBitCount = 32
-                PalEntries = 0
-        End Select
-        BIH.biClrUsed = PalEntries
-
-        MMFsize = Marshal.SizeOf(BIH) + PalEntries * Marshal.SizeOf(GetType(RGBQUAD)) + ImageSize
-        ReDim Bytes(MMFsize)
-
-        BytesGC = GCHandle.Alloc(Bytes, GCHandleType.Pinned)
-        Marshal.StructureToPtr(BIH, BytesGC.AddrOfPinnedObject, True)
-        Offset = Marshal.SizeOf(BIH)
-        For PalEntry = 0 To PalEntries - 1
-            rgb.rgbRed = BMP.Palette.Entries(PalEntry).R
-            rgb.rgbGreen = BMP.Palette.Entries(PalEntry).G
-            rgb.rgbBlue = BMP.Palette.Entries(PalEntry).B
-            Marshal.StructureToPtr(rgb, Marshal.UnsafeAddrOfPinnedArrayElement(Bytes, Offset), False)
-            Offset = Offset + Marshal.SizeOf(rgb)
-        Next
-        BytesGC.Free()
-        Marshal.Copy(BMPData.Scan0, Bytes, Offset, ImageSize)
-        BMP.UnlockBits(BMPData)
-        BMPData = Nothing
-        BMP.Dispose()
-        BMP = Nothing
-
-        MMFhandle = CreateFileMappingMy(&HFFFFFFFF, 0&, PAGE_READWRITE, 0, MMFsize, 0&)
-        If Not MMFhandle.Equals(IntPtr.Zero) Then
-            MMFview = MapViewOfFileMy(MMFhandle, FILE_MAP_WRITE, 0, 0, 0)
-            If MMFview.Equals(IntPtr.Zero) Then
-                CloseHandle(MMFhandle)
-            Else
-                Marshal.Copy(Bytes, 0, MMFview, MMFsize)
-                UnmapViewOfFileMy(MMFview)
-                ConvertBitmapToMMF = MMFhandle
-            End If
-        End If
-
-        Bytes = Nothing
-
-        If MMFhandle.Equals(IntPtr.Zero) Then
-            MsgBox("Failed to convert bitmap", MsgBoxStyle.Critical, "ConvertBitmapToMMF")
-        End If
-
-    End Function
-
-    ' Convert a bitmap to a memory mapped file
-    ' (Same as ConvertBitmapToMMF but uses CopyMemory to avoid using a byte array)
-    Private Function ConvertBitmapToMMF2(ByRef BMPIn As Bitmap, _
-        Optional ByVal DiscardBitmap As Boolean = True, _
-        Optional ByVal ConvertTo1Bit As Boolean = True) As IntPtr
-
-        Dim BMP As Bitmap
-        Dim BIH As BITMAPINFOHEADER
-        Dim BMPData As BitmapData
-        Dim ImageSize As Integer
-        Dim MMFsize As Integer
-        Dim PalEntries As Integer
-        Dim PalEntry As Integer
-        Dim rgb As RGBQUAD
-        Dim rgbGC As GCHandle
-        Dim Offset As Integer
-        Dim MMFhandle As IntPtr = IntPtr.Zero
-        Dim MMFview As IntPtr = IntPtr.Zero
-
-        ConvertBitmapToMMF2 = IntPtr.Zero
-
-        If DiscardBitmap Then   ' can destroy input bitmap
-            If ConvertTo1Bit Then
-                BMP = ConvertTo1bpp(BMPIn)
-                BMPIn.Dispose()
-                BMPIn = Nothing
-            Else
-                BMP = BMPIn
-            End If
-        Else                    ' must keep input bitmap unchanged
-            If ConvertTo1Bit Then
-                BMP = ConvertTo1bpp(BMPIn)
-            Else
-                BMP = BMPIn.Clone(New Rectangle(New Point, BMPIn.Size), BMPIn.PixelFormat)
-            End If
-        End If
-
-        ' Flip the bitmap (GDI+ bitmap scan lines are top down, GDI are bottom up)
-        BMP.RotateFlip(RotateFlipType.RotateNoneFlipY)
-
-        BMPData = BMP.LockBits(New Rectangle(New Point, BMP.Size), ImageLockMode.ReadOnly, BMP.PixelFormat)
-        ImageSize = BMPData.Stride * BMP.Height
-
-        PalEntries = BMP.Palette.Entries.Length
-
-        BIH.biWidth = BMP.Width
-        BIH.biHeight = BMP.Height
-        BIH.biPlanes = 1
-        BIH.biSize = Marshal.SizeOf(BIH)
-        BIH.biClrImportant = 0
-        BIH.biCompression = BI_RGB
-        BIH.biSizeImage = ImageSize
-        BIH.biXPelsPerMeter = CInt(BMP.HorizontalResolution * 100 / 2.54)
-        BIH.biYPelsPerMeter = CInt(BMP.VerticalResolution * 100 / 2.54)
-
-        ' Most of these formats are untested and the alpha channel is ignored
-        Select Case BMP.PixelFormat
-            Case PixelFormat.Format1bppIndexed
-                BIH.biBitCount = 1
-            Case PixelFormat.Format4bppIndexed
-                BIH.biBitCount = 4
-            Case PixelFormat.Format8bppIndexed
-                BIH.biBitCount = 8
-            Case PixelFormat.Format16bppArgb1555, PixelFormat.Format16bppGrayScale, PixelFormat.Format16bppRgb555, PixelFormat.Format16bppRgb565
-                BIH.biBitCount = 16
-                PalEntries = 0
-            Case PixelFormat.Format24bppRgb
-                BIH.biBitCount = 24
-                PalEntries = 0
-            Case PixelFormat.Format32bppArgb, PixelFormat.Format32bppPArgb, PixelFormat.Format32bppRgb
-                BIH.biBitCount = 32
-                PalEntries = 0
-        End Select
-        BIH.biClrUsed = PalEntries
-
-        MMFsize = Marshal.SizeOf(BIH) + PalEntries * Marshal.SizeOf(GetType(RGBQUAD)) + ImageSize
-
-        MMFhandle = CreateFileMappingMy(&HFFFFFFFF, 0&, PAGE_READWRITE, 0, MMFsize, 0&)
-        If Not MMFhandle.Equals(IntPtr.Zero) Then
-            MMFview = MapViewOfFileMy(MMFhandle, FILE_MAP_WRITE, 0, 0, 0)
-            If MMFview.Equals(IntPtr.Zero) Then
-                CloseHandle(MMFhandle)
-            Else
-                Marshal.StructureToPtr(BIH, MMFview, True)
-
-                Offset = MMFview.ToInt32 + Marshal.SizeOf(BIH)
-                For PalEntry = 0 To PalEntries - 1
-                    rgb.rgbRed = BMP.Palette.Entries(PalEntry).R
-                    rgb.rgbGreen = BMP.Palette.Entries(PalEntry).G
-                    rgb.rgbBlue = BMP.Palette.Entries(PalEntry).B
-                    rgbGC = GCHandle.Alloc(rgb, GCHandleType.Pinned)
-                    CopyMemory(Offset, rgbGC.AddrOfPinnedObject, Marshal.SizeOf(rgb))
-                    rgbGC.Free()
-                    Offset = Offset + Marshal.SizeOf(rgb)
-                Next
-                CopyMemory(Offset, BMPData.Scan0, ImageSize)
-
-                UnmapViewOfFileMy(MMFview)
-                ConvertBitmapToMMF2 = MMFhandle
-            End If
-        End If
-        BMP.UnlockBits(BMPData)
-        BMPData = Nothing
-        BMP.Dispose()
-        BMP = Nothing
-
-        If MMFhandle.Equals(IntPtr.Zero) Then
-            MsgBox("Failed to convert bitmap", MsgBoxStyle.Critical, "ConvertBitmapToMMF2")
-        End If
-
-    End Function
-
-    ' Convert a global memory block to a bitmap
-    Private Function ConvertMemoryBlockToBitmap(ByVal hMem As IntPtr) As Bitmap
-        Dim BMP As Bitmap
-        Dim BIH As BITMAPINFOHEADER
-        Dim bihPtr As IntPtr
-        Dim dataPtr As IntPtr
-        Dim palPtr As IntPtr
-        Dim HdrSize As Integer
-        Dim PixFormat As PixelFormat
-        Dim PalEntries As Integer
-        Dim rgb As RGBQUAD
-
-        BMP = Nothing
-        bihPtr = GlobalLock(hMem)
-
-        If Not bihPtr.Equals(IntPtr.Zero) Then
-
-            BIH = CType(Marshal.PtrToStructure(bihPtr, GetType(BITMAPINFOHEADER)), BITMAPINFOHEADER)
-            HdrSize = BIH.biSize
-            palPtr = New IntPtr(bihPtr.ToInt32() + HdrSize)
-
-            ' Most of these formats are untested
-            PixFormat = PixelFormat.Format1bppIndexed
-            Select Case BIH.biBitCount
-                Case 1
-                    HdrSize += 2 * Marshal.SizeOf(rgb)
-                    PixFormat = PixelFormat.Format1bppIndexed
-                    PalEntries = 2
-                Case 4
-                    HdrSize += 16 * Marshal.SizeOf(rgb)
-                    PixFormat = PixelFormat.Format4bppIndexed
-                    PalEntries = BIH.biClrUsed
-                Case 8
-                    HdrSize += 256 * Marshal.SizeOf(rgb)
-                    PixFormat = PixelFormat.Format8bppIndexed
-                    PalEntries = BIH.biClrUsed
-                Case 16
-                    ' Account for the 3 DWORD colour mask
-                    If BIH.biCompression = BI_BITFIELDS Then HdrSize += 12
-                    PixFormat = PixelFormat.Format16bppRgb555
-                    PalEntries = 0
-                Case 24
-                    PixFormat = PixelFormat.Format24bppRgb
-                    PalEntries = 0
-                Case 32
-                    ' Account for the 3 DWORD colour mask
-                    If BIH.biCompression = BI_BITFIELDS Then HdrSize += 12
-                    PixFormat = PixelFormat.Format32bppRgb
-                    PalEntries = 0
-                Case Else
-            End Select
-
-            dataPtr = New IntPtr(bihPtr.ToInt32() + HdrSize)
-            BMP = New Bitmap(BIH.biWidth, Math.Abs(BIH.biHeight), PixFormat)
-            If PalEntries > 0 Then
-
-                palPtr = New IntPtr(bihPtr.ToInt32() + BIH.biSize)
-                Dim Pal As ColorPalette
-                Dim PalEntry As Integer
-                Pal = BMP.Palette
-                For PalEntry = 0 To PalEntries - 1
-                    rgb = CType(Marshal.PtrToStructure(palPtr, GetType(RGBQUAD)), RGBQUAD)
-                    Pal.Entries(PalEntry) = Color.FromArgb(rgb.rgbRed, rgb.rgbGreen, rgb.rgbBlue)
-                    palPtr = New IntPtr(palPtr.ToInt32() + Marshal.SizeOf(rgb))
-                Next PalEntry
-                BMP.Palette = Pal
-            End If
-            Dim BMPData As BitmapData
-            BMPData = BMP.LockBits(New Rectangle(New Point, BMP.Size), ImageLockMode.ReadWrite, PixFormat)
-            CopyMemory(BMPData.Scan0.ToInt32(), dataPtr, BMPData.Stride * BMP.Height)
-            BMP.UnlockBits(BMPData)
-            ' Flip the bitmap (GDI+ bitmap scan lines are top down, GDI are bottom up)
-            BMP.RotateFlip(RotateFlipType.RotateNoneFlipY)
-
-            ' Reset the resolutions
-            BMP.SetResolution(CSng(Int(BIH.biXPelsPerMeter * 2.54 / 100 + 0.5)), CSng(Int(BIH.biYPelsPerMeter * 2.54 / 100 + 0.5)))
-            GlobalUnlock(hMem)
-        End If
-
-        Return BMP
     End Function
 
 End Module
