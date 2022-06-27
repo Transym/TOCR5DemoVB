@@ -3,9 +3,9 @@
 ' EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
 ' WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
 '
-' Copyright (C) 2021 Transym Computer Services Ltd.
+' Copyright (C) 2022 Transym Computer Services Ltd.
 '
-' TOCR5.1DemoVB.NET
+' TOCR5DemoVB.NET
 
 Option Strict On
 Option Explicit On
